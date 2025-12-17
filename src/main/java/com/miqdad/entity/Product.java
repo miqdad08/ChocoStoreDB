@@ -31,6 +31,9 @@ public class Product {
     @Column(name = "category_id", nullable = false)
     private Long categoryId;
 
+    @Transient
+    private Category category; // hanya buat response detail
+
     @Column(nullable = false)
     private Boolean isActive;
 }

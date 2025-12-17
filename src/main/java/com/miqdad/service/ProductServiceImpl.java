@@ -1,11 +1,13 @@
 package com.miqdad.service;
 
 import lombok.RequiredArgsConstructor;
+
+import com.miqdad.entity.Category;
 import com.miqdad.entity.Product;
+import com.miqdad.repository.CategoryRepository;
 import com.miqdad.repository.ProductRepository;
 import com.miqdad.entity.ProductRequestDto;
 import com.miqdad.entity.ProductSpecification;
-
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -17,14 +19,19 @@ import java.util.List;
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
 
     @Override
     public Product create(ProductRequestDto request) {
-        Product product = mapToEntity(request);
+        Product product = new Product();
         product.setId(null);
-        if (product.getIsActive() == null) {
-            product.setIsActive(true);
-        }
+        product.setName(request.getName());
+        product.setDescription(request.getDescription());
+        product.setPrice(request.getPrice());
+        product.setStock(request.getStock());
+        product.setCategoryId(request.getCategoryId());
+        product.setIsActive(
+                request.getIsActive() != null ? request.getIsActive() : true);
         return productRepository.save(product);
     }
 
@@ -33,11 +40,14 @@ public class ProductServiceImpl implements ProductService {
         Product existing = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
+        Category category = categoryRepository.findById(request.getCategoryId())
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+
         existing.setName(request.getName());
         existing.setDescription(request.getDescription());
         existing.setPrice(request.getPrice());
         existing.setStock(request.getStock());
-        existing.setCategoryId(request.getCategoryId());
+        existing.setCategory(category);
         existing.setIsActive(request.getIsActive());
 
         return productRepository.save(existing);
@@ -52,8 +62,15 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Product getById(Long id) {
-        return productRepository.findById(id)
+        Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        Category category = categoryRepository.findById(product.getCategoryId())
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+
+        product.setCategory(category); // isi field transient
+
+        return product;
     }
 
     @Override
@@ -63,12 +80,15 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private Product mapToEntity(ProductRequestDto dto) {
+        Category category = categoryRepository.findById(dto.getCategoryId())
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+
         return Product.builder()
                 .name(dto.getName())
                 .description(dto.getDescription())
                 .price(dto.getPrice())
                 .stock(dto.getStock())
-                .categoryId(dto.getCategoryId())
+                .category(category) // set object Category
                 .isActive(dto.getIsActive())
                 .build();
     }
