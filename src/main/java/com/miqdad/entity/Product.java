@@ -1,4 +1,4 @@
-package com.miqdad.product;
+package com.miqdad.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
