@@ -36,9 +36,11 @@ public class ProductSpecification {
 
     // method helper untuk gabung semua filter
     public static Specification<Product> build(String name, Long categoryId, Boolean active) {
-        return Specification
-                .where(hasNameLike(name))
-                .and(hasCategoryId(categoryId))
-                .and(isActive(active));
-    }
+    return Specification.allOf(
+            hasNameLike(name),
+            hasCategoryId(categoryId),
+            isActive(active)
+    );
+}
+
 }
